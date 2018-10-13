@@ -4,24 +4,24 @@
 #include <iostream>
 #include <type_traits>
 #include <string>
+#include <cassert>
 
 template<class T>
 class optional {
-    typename std::aligned_storage<sizeof(T), alignof(T)>::type data[1];
+    typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
     bool full = false;
 
 public:
     optional() = default;
 
     optional(T const &val) {
-        clear();
         full = true;
-        new(reinterpret_cast<T *>(data)) T(val);
+        new(reinterpret_cast<T *>(&data)) T(val);
     }
 
     optional(optional const &other) : full(other.full) {
         if (full) {
-            new(reinterpret_cast<T *>(data)) T(*reinterpret_cast<const T *>(other.data));
+            new(reinterpret_cast<T *>(&data)) T(*reinterpret_cast<const T *>(&other.data));
         }
     }
 
@@ -41,23 +41,35 @@ public:
 
     void clear() {
         if (full) {
-            reinterpret_cast<T *>(data)->~T();
+            reinterpret_cast<T *>(&data)->~T();
             full = false;
         }
     }
 
     void swap(optional &other) {
-        std::swap(data, other.data);
+        std::swap(*reinterpret_cast<T*>(&data), *reinterpret_cast<T*>(&other.data));
         std::swap(full, other.full);
     }
 
 
     T &operator*() {
-        return *reinterpret_cast<T *>(data);
+        assert(full);
+        return *reinterpret_cast<T *>(&data);
+    }
+
+    T const &operator* () const{
+        assert(full);
+        return *reinterpret_cast<T *>(&data);
     }
 
     T *operator->() {
-        return (reinterpret_cast<T *>(data));
+        assert(full);
+        return (reinterpret_cast<T *>(&data));
+    }
+
+    T const *operator->() const{
+        assert(full);
+        return (reinterpret_cast<T *>(&data));
     }
 };
 
