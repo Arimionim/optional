@@ -21,7 +21,7 @@ public:
 
     optional(optional const &other) : full(other.full) {
         if (full) {
-            new(reinterpret_cast<T *>(&data)) T(*reinterpret_cast<const T *>(&other.data));
+            new(reinterpret_cast<T *>(&data)) T(*other);
         }
     }
 
@@ -47,8 +47,20 @@ public:
     }
 
     void swap(optional &other) {
-        std::swap(*reinterpret_cast<T*>(&data), *reinterpret_cast<T*>(&other.data));
-        std::swap(full, other.full);
+        if (full && other.full) {
+            std::swap(*reinterpret_cast<T *>(&data), *reinterpret_cast<T *>(&other.data));
+            std::swap(full, other.full);
+        }
+        else if (full){
+            new(reinterpret_cast<T *>(&other.data)) T(*(*this));
+            this->clear();
+            other.full = 1;
+        }
+        else if (other.full){
+            new(reinterpret_cast<T *>(&data)) T(*other);
+            other.clear();
+            full = 1;
+        }
     }
 
 
@@ -59,7 +71,7 @@ public:
 
     T const &operator* () const{
         assert(full);
-        return *reinterpret_cast<T *>(&data);
+        return *reinterpret_cast<T const *>(&data);
     }
 
     T *operator->() {
@@ -69,7 +81,7 @@ public:
 
     T const *operator->() const{
         assert(full);
-        return (reinterpret_cast<T *>(&data));
+        return (reinterpret_cast<T const *>(&data));
     }
 };
 
