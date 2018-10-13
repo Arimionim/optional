@@ -8,20 +8,20 @@
 template<class T>
 class optional {
     typename std::aligned_storage<sizeof(T), alignof(T)>::type data[1];
-    bool full = 0;
+    bool full = false;
 
 public:
     optional() = default;
 
-    optional(T const & val){
+    optional(T const &val) {
         clear();
-        full = 1;
+        full = true;
         new(reinterpret_cast<T *>(data)) T(val);
     }
 
-    optional(optional const &other): full(other.full) {
+    optional(optional const &other) : full(other.full) {
         if (full) {
-            new(reinterpret_cast<T*>(data)) T(*reinterpret_cast<const T *>(other.data));
+            new(reinterpret_cast<T *>(data)) T(*reinterpret_cast<const T *>(other.data));
         }
     }
 
@@ -42,27 +42,27 @@ public:
     void clear() {
         if (full) {
             reinterpret_cast<T *>(data)->~T();
-            full = 0;
+            full = false;
         }
     }
 
-    void swap(optional &other){
+    void swap(optional &other) {
         std::swap(data, other.data);
         std::swap(full, other.full);
     }
 
 
     T &operator*() {
-        return *reinterpret_cast<T*>(data);
+        return *reinterpret_cast<T *>(data);
     }
 
     T *operator->() {
-        return (reinterpret_cast<T*>(data));
+        return (reinterpret_cast<T *>(data));
     }
 };
 
-template <typename T>
-void swap(optional<T> a, optional<T> b){
+template<typename T>
+void swap(optional<T> &a, optional<T> &b) {
     a.swap(b);
 }
 
